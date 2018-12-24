@@ -1,12 +1,69 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import ast
+import mysql.connector
+
+def GetExistingRecords():
+	existingRecords= []
+	try:
+		cnx = mysql.connector.connect(user='python_script', password='Dzkiwcnp4gT',
+								  host='127.0.0.1',
+								  database='HouseData')
+		cursor = cnx.cursor()
+
+		query = ("SELECT zpid FROM identitytable;")
+
+		cursor.execute(query)
+
+		for (zpid) in cursor:
+			existingRecords.append(zpid)
+
+		cursor.close()
+	except mysql.connector.Error as err:
+			print(err)
+	else:
+		cnx.close()
+	print(existingRecords)
+	return existingRecords
+
+
+
+def WorkingOnThisFunction():
+	#Start by getting existing records
+	existingRecords = GetExistingRecords()
+
+	#Open housedata.txt and load each record into a list
+
+	#For each record, store zpid and other data as variables
+
+def DatabaseWork():
+	try:
+		cnx = mysql.connector.connect(user='python_script', password='Dzkiwcnp4gT',
+								  host='127.0.0.1',
+								  database='HouseData')
+		cursor = cnx.cursor()
+
+		query = ("SELECT street_address FROM location")
+
+		cursor.execute(query)
+
+		for (street_address) in cursor:
+			print(street_address)
+
+		cursor.close()
+	except mysql.connector.Error as err:
+			print(err)
+	else:
+		cnx.close()
+
+
+
 
 def PrintMenu():
 	print("1 Gather HTML file from Zillow.com")
 	#print("2 Run BeautifulSoup")
-	print("3 PrettifyJSON")
+	print("2 ParseResponse")
+	print("3 Database")
 
 
 def ScrapeZillow():
@@ -24,9 +81,7 @@ def ScrapeZillow():
 
 	r = requests.get(url,headers=headers)
 	json_response = json.loads(r.text)
-	#json_response = ast.literal_eval(json_response)
-	#parsed = json.loads(str(json_response))
-	#print(json.dumps(parsed, indent=4, sort_keys=True))
+
 
 	#Write the response to zillow.txt file
 	f = open("zillow.txt", "a", encoding='utf-8')
@@ -43,43 +98,28 @@ def ParseResponse():
 
 	splitJSON = data_to_read.split('"homeInfo":')
 	count = 0
-	f = open("zillowFinal.txt", "a", encoding='utf-8')
+
 	for line in splitJSON:
 		tempLine = line.split('USA"}')
 		if count != 0:
 			list2.append(tempLine[0] + 'USA"}\n')
 		count += 1
 
-	f.write(list2)
-	f.write("Number of records: " + str(count))
-	f.close()
 
-		#print(tempLine[0] + "}")
-		
-	#print(data_to_read)
-"""
-	data_to_read = data_to_read.replace("\'", "\"")
-	parsed_json = json.loads(data_to_read)
-	print(parsed_json['homeInfo'])
-"""
+	with open('housedata.txt', 'w') as f:
+		f.write("Number of records: " + str(count))
+		for item in list2:
+			f.write('%s\n' % item)
+
+
 def PrettifyJSON(txtFile):
 	newList = txtFile.split(',')
-	#newList = txtFile.split('{')
-	#delimiter = '{'
-	#firstIteration = True
+
 
 	for line in newList:
 		print(line)
 
 
-"""
-	for line in newList:
-		if firstIteration != True:
-			line = delimiter + line
-			print(line)
-		else:
-			firstIteration = False
-"""
 
 if __name__=="__main__":
 	#Launch the options
@@ -89,43 +129,9 @@ if __name__=="__main__":
 	if userOption == "1":
 		print("Scraping Zillow now")
 		ScrapeZillow()
-	elif userOption == "3":
-		print("PrettifyJSON")
-		PrettifyJSON('{"zpid": 29480655,"streetAddress": "4507 Yellow Rose Trl","zipcode": "78749","city": "Austin","state": "TX","latitude": 30.227091,"longitude": \\-97.838881,"price": 415000.0,"dateSold": 0,"datePriceChanged": 1542315840000,"bathrooms": 2.5,"bedrooms": 4.0,"livingArea": 2077.0,"yearBuilt": 1982,"lotSize": 9743.0,"homeType": "SINGLE_FAMILY","homeStatus": "FOR_SALE","photoCount": 37,"imageLink": "https://photos.zillowstatic.com/p_g/ISmiccrir40fbt1000000000.jpg","daysOnZillow": 58,"isFeatured": false,"shouldHighlight": false,"brokerId": 15439,"contactPhone": "5125881453","zestimate": 414842,"rentZestimate": 2095,"listing_sub_type": {"is_FSBA": true},"priceReduction": "$10,000 (Nov 15)","isUnmappable": false,"mediumImageLink": "https://photos.zillowstatic.com/p_c/ISmiccrir40fbt1000000000.jpg","isPreforeclosureAuction": false,"homeStatusForHDP": "FOR_SALE","priceForHDP": 415000.0,"festimate": 306983,"priceChange": \\-10000,"isListingOwnedByCurrentSignedInAgent": false,"timeOnZillow": 1539869340000,"isListingClaimedByCurrentSignedInUser": false,"hiResImageLink": "https://photos.zillowstatic.com/p_f/ISmiccrir40fbt1000000000.jpg","watchImageLink": "https://photos.zillowstatic.com/p_j/ISmiccrir40fbt1000000000.jpg","contactPhoneExtension": "","tvImageLink": "https://photos.zillowstatic.com/p_m/ISmiccrir40fbt1000000000.jpg","tvCollectionImageLink": "https://photos.zillowstatic.com/p_l/ISmiccrir40fbt1000000000.jpg","tvHighResImageLink": "https://photos.zillowstatic.com/p_n/ISmiccrir40fbt1000000000.jpg","zillowHasRightsToImages": false,"desktopWebHdpImageLink": "https://photos.zillowstatic.com/p_h/ISmiccrir40fbt1000000000.jpg","isNonOwnerOccupied": true,"hideZestimate": false,"isPremierBuilder": false,"isZillowOwned": false,"currency": "USD","country": "USA"}')
-	elif userOption == "4":
+	elif userOption == "2":
 		ParseResponse()
+	elif userOption == "3":
+		GetExistingRecords()
 	else:
 		print("User option is invalid.  Exiting.")
-
-
-
-
-
-
-"""
-	#print(r.text)
-	soup = BeautifulSoup(r.content, "html.parser")
-
-	print(soup.title.text)
-
-	HouseList = soup.findall('ul')
-	#HouseList = soup.findall('ul', attrs={"class":"photo-cards"})
-
-	for i in HouseList:
-		print(i)
-"""
-
-
-
-
-
-
-"""
-if __name__=="__main__":
-	parser = argparse.ArgumentParser()
-	#parser.parse_args()
-
-	parser.add_argument("echo", help="echo the string you use here")
-	args = parser.parse_args()
-	print(args.echo)
-"""
